@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sudoku Modern — Game Puzzle HTML5 Interaktif</title>
+    
+    <!-- Tailwind CSS untuk tata letak responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* =========================================================
+           1. VARIABEL TEMA (DARK MODE & LIGHT MODE)
+           ========================================================= */
+        :root {
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --transition-theme: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-base: #090d16;
+            --bg-gradient-1: rgba(56, 189, 248, 0.16);
+            --bg-gradient-2: rgba(139, 92, 246, 0.18);
+            --bg-gradient-3: rgba(16, 185, 129, 0.12);
+            --glass-bg: rgba(17, 25, 40, 0.72);
+            --glass-bg-strong: rgba(15, 23, 42, 0.92);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            /* Warna Sel Papan Sudoku */
+            --board-border-outer: #64748b;
+            --board-border-box: #64748b;
+            --board-border-cell: rgba(148, 163, 184, 0.16);
+            --cell-bg: rgba(30, 41, 59, 0.45);
+            --cell-hover: rgba(56, 189, 248, 0.14);
+            --cell-related: rgba(56, 189, 248, 0.09);
+            --cell-same-num: rgba(56, 189, 248, 0.24);
+            --cell-selected: rgba(56, 189, 248, 0.38);
+            --cell-selected-ring: #38bdf8;
+            
+            /* Warna Angka */
+            --num-fixed: #f1f5f9;
+            --num-user: #38bdf8;
+            --num-hint: #34d399;
+            --num-error: #fb7185;
+            --cell-error-bg: rgba(244, 63, 94, 0.22);
+            --note-color: #94a3b8;
+            --note-highlight: #38bdf8;
+
+            /* Tombol & Kontrol */
+            --btn-bg: rgba(30, 41, 59, 0.7);
+            --btn-hover: rgba(51, 65, 85, 0.85);
+            --accent-primary: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.35);
+        }
+
+        [data-theme="light"] {
+            --bg-base: #eef2f6;
+            --bg-gradient-1: rgba(14, 165, 233, 0.18);
+            --bg-gradient-2: rgba(99, 102, 241, 0.15);
+            --bg-gradient-3: rgba(16, 185, 129, 0.14);
+            --glass-bg: rgba(255, 255, 255, 0.78);
+            --glass-bg-strong: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(15, 23, 42, 0.09);
+            --glass-shadow: 0 20px 45px rgba(15, 23, 42, 0.09);
+            
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            
+            /* Warna Sel Papan Sudoku */
+            --board-border-outer: #334155;
+            --board-border-box: #475569;
+            --board-border-cell: rgba(100, 116, 139, 0.22);
+            --cell-bg: rgba(255, 255, 255, 0.75);
+            --cell-hover: rgba(2, 132, 199, 0.08);
+            --cell-related: rgba(2, 132, 199, 0.08);
+            --cell-same-num: rgba(2, 132, 199, 0.2);
+            --cell-selected: rgba(2, 132, 199, 0.3);
+            --cell-selected-ring: #0284c7;
+            
+            /* Warna Angka */
+            --num-fixed: #0f172a;
+            --num-user: #0284c7;
+            --num-hint: #059669;
+            --num-error: #e11d48;
+            --cell-error-bg: rgba(244, 63, 94, 0.16);
+            --note-color: #64748b;
+            --note-highlight: #0284c7;
+
+            /* Tombol & Kontrol */
+            --btn-bg: rgba(255, 255, 255, 0.85);
+            --btn-hover: rgba(241, 245, 249, 1);
+            --accent-primary: #0284c7;
+            --accent-glow: rgba(2, 132, 199, 0.25);
+        }
+
+        /* =========================================================
+           2. GAYA DASAR & GLASSMORPHISM
+           ========================================================= */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font-sans);
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            transition: var(--transition-theme);
+            overflow-x: hidden;
+            min-height: 100dvh;
+        }
+
+        /* Latar belakang cahaya ambien lembut */
+        .ambient-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .ambient-orb {
+            position: absolute;
+            border-radius: 9999px;
+            filter: blur(80px);
+            opacity: 0.9;
+            animation: floatOrb 16s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
+            width: 45vw;
+            height: 45vw;
+            max-width: 480px;
+            max-height: 480px;
+            top: -10%;
+            left: -8%;
+            background: var(--bg-gradient-1);
+        }
+
+        .orb-2 {
+            width: 50vw;
+            height: 50vw;
+            max-width: 520px;
+            max-height: 520px;
+            bottom: -12%;
+            right: -10%;
+            background: var(--bg-gradient-2);
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 35vw;
+            height: 35vw;
+            max-width: 360px;
+            max-height: 360px;
+            top: 42%;
+            left: 55%;
+            background: var(--bg-gradient-3);
+            animation-delay: -10s;
+        }
+
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(25px, -30px) scale(1.08); }
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            transition: var(--transition-theme);
+        }
+
+        /* =========================================================
+           3. PAPAN SUDOKU 9x9 & GARIS BLOK 3x3
+           ========================================================= */
+        .sudoku-board-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2.5px solid var(--board-border-outer);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+            background: var(--cell-bg);
+        }
+
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            width: 100%;
+            height: 100%;
+        }
+
+        .sudoku-cell {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid var(--board-border-cell);
+            border-bottom: 1px solid var(--board-border-cell);
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: clamp(1.15rem, 4.8vw, 1.75rem);
+            font-weight: 700;
+            transition: background-color 0.16s ease, transform 0.15s ease;
+        }
+
+        /* Garis pemisah blok 3x3 yang tegas */
+        .sudoku-cell[data-col="2"],
+        .sudoku-cell[data-col="5"] {
+            border-right: 2.5px solid var(--board-border-box);
+        }
+
+        .sudoku-cell[data-col="8"] {
+            border-right: none;
+        }
+
+        .sudoku-cell[data-row="2"],
+        .sudoku-cell[data-row="5"] {
+            border-bottom: 2.5px solid var(--board-border-box);
+        }
+
+        .sudoku-cell[data-row="8"] {
+            border-bottom: none;
+        }
+
+        /* Status Highlight Sel */
+        .sudoku-cell:hover {
+            background-color: var(--cell-hover);
+        }
+
+        .sudoku-cell.is-related {
+            background-color: var(--cell-related);
+        }
+
+        .sudoku-cell.is-same-num {
+            background-color: var(--cell-same-num);
+        }
+
+        .sudoku-cell.is-selected {
+            background-color: var(--cell-selected) !important;
+            box-shadow: inset 0 0 0 2px var(--cell-selected-ring);
+            z-index: 2;
+        }
+
+        .sudoku-cell.is-error {
+            background-color: var(--cell-error-bg) !important;
+            color: var(--num-error) !important;
+        }
+
+        /* Tipe Angka di Dalam Sel */
+        .cell-value {
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .cell-value.fixed {
+            color: var(--num-fixed);
+        }
+
+        .cell-value.user {
+            color: var(--num-user);
+        }
+
+        .cell-value.hint {
+            color: var(--num-hint);
+        }
+
+        .cell-value.error {
+            color: var(--num-error);
+        }
+
+        /* Grid Mini 3x3 untuk Mode Catatan (Notes) */
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 88%;
+            height: 88%;
+            pointer-events: none;
+        }
+
+        .note-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: clamp(0.5rem, 1.8vw, 0.68rem);
+            font-weight: 600;
+            line-height: 1;
+            color: var(--note-color);
+            transition: color 0.15s ease, transform 0.15s ease;
+        }
+
+        .note-item.is-highlighted-note {
+            color: var(--note-highlight);
+            font-weight: 800;
+            transform: scale(1.15);
+        }
+
+        /* =========================================================
+           4. ANIMASI KEREN (POP-IN, SHAKE, WAVE COMPLETION)
+           ========================================================= */
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.35);
+            }
+            65% {
+                opacity: 1;
+                transform: scale(1.18);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .anim-pop {
+            animation: popIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes shakeCell {
+            0%, 100% { transform: translateX(0); }
+            18% { transform: translateX(-5px); }
+            36% { transform: translateX(5px); }
+            54% { transform: translateX(-4px); }
+            72% { transform: translateX(4px); }
+            90% { transform: translateX(-2px); }
+        }
+
+        .anim-shake {
+            animation: shakeCell 0.42s ease-in-out;
+        }
+
+        /* Animasi Gelombang saat Baris / Kolom / Kotak 3x3 Selesai */
+        @keyframes completionWave {
+            0% {
+                transform: scale(1);
+                background-color: var(--cell-bg);
+            }
+            35% {
+                transform: scale(0.92);
+                background-color: rgba(16, 185, 129, 0.45);
+                box-shadow: inset 0 0 14px rgba(52, 211, 153, 0.7);
+            }
+            70% {
+                transform: scale(1.03);
+                background-color: rgba(56, 189, 248, 0.35);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .anim-wave {
+            animation: completionWave 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            z-index: 3;
+        }
+
+        /* Animasi Muncul Papan Baru */
+        @keyframes boardFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(0.985);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .board-refresh {
+            animation: boardFadeIn 0.35s ease-out;
+        }
+
+        /* Tombol Kontrol & Angka */
+        .control-btn {
+            background: var(--btn-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            transition: all 0.18s ease;
+        }
+
+        .control-btn:hover:not(:disabled) {
+            background: var(--btn-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .control-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .num-btn {
+            background: var(--btn-bg);
+            border: 1px solid var(--glass-border);
+            transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .num-btn:hover:not(.is-completed) {
+            background: var(--btn-hover);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .num-btn:active:not(.is-completed) {
+            transform: scale(0.93);
+        }
+
+        .num-btn.is-completed {
+            opacity: 0.28;
+            pointer-events: none;
+            transform: scale(0.94);
+        }
+
+        /* Overlay Pause */
+        .pause-overlay {
+            background: var(--glass-bg-strong);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            transition: opacity 0.28s ease, visibility 0.28s ease;
+        }
+
+        /* Modal Overlay */
+        .modal-backdrop {
+            background: rgba(2, 6, 23, 0.72);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center px-3 py-3 sm:py-5">
+
+    <!-- Latar Belakang Ambien -->
+    <div class="ambient-bg" aria-hidden="true">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+    </div>
+
+    <!-- Canvas Konfeti untuk Kemenangan -->
+    <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+    <!-- Kontainer Utama Aplikasi -->
+    <main class="w-full max-w-[490px] flex flex-col gap-3 sm:gap-3.5">
+        
+        <!-- HEADER: Logo, Judul, Tema, Audio, & Game Baru -->
+        <header class="glass-panel rounded-2xl px-4 py-2.5 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/25">
+                    <!-- Ikon Grid Sudoku SVG -->
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <rect x="3" y="3" width="18" height="18" rx="3"/>
+                        <line x1="9" y1="3" x2="9" y2="21"/>
+                        <line x1="15" y1="3" x2="15" y2="21"/>
+                        <line x1="3" y1="9" x2="21" y2="9"/>
+                        <line x1="3" y1="15" x2="21" y2="15"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-extrabold tracking-tight leading-none">SUDOKU</h1>
+                    <p class="text-[11px] font-medium" style="color: var(--text-secondary);">Edisi Klasik Modern</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 sm:gap-2">
+                <!-- Tombol Toggle Audio -->
+                <button id="btn-sound" type="button" title="Suara Efek (Mute/Unmute)" class="control-btn p-2.5 rounded-xl flex items-center justify-center" aria-label="Suara Efek">
+                    <svg id="icon-sound-on" class="w-4 h-4 sm:w-5 sm:h-5 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                    </svg>
+                    <svg id="icon-sound-off" class="w-4 h-4 sm:w-5 sm:h-5 hidden" style="color: var(--text-muted);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <line x1="23" y1="9" x2="17" y2="15"></line>
+                        <line x1="17" y1="9" x2="23" y2="15"></line>
+                    </svg>
+                </button>
+
+                <!-- Tombol Toggle Dark / Light Mode -->
+                <button id="btn-theme" type="button" title="Ubah Tema Gelap / Terang" class="control-btn p-2.5 rounded-xl flex items-center justify-center" aria-label="Ubah Tema">
+                    <svg id="icon-sun" class="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg id="icon-moon" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+
+                <!-- Tombol Permainan Baru -->
+                <button id="btn-new-game" type="button" class="px-3 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-white text-xs sm:text-sm font-bold shadow-md shadow-sky-500/20 transition-all active:scale-95">
+                    Baru
+                </button>
+            </div>
+        </header>
+
+        <!-- PANEL TINGKAT KESULITAN & STATISTIK -->
+        <section class="glass-panel rounded-2xl p-2.5 sm:p-3 flex flex-col gap-2.5">
+            <!-- Pemilih 4 Tingkat Kesulitan -->
+            <div class="grid grid-cols-4 gap-1.5 p-1 rounded-xl" style="background: rgba(100, 116, 139, 0.14);" role="tablist" aria-label="Tingkat Kesulitan">
+                <button type="button" data-diff="easy" class="diff-tab py-1.5 rounded-lg text-xs font-bold transition-all">Mudah</button>
+                <button type="button" data-diff="medium" class="diff-tab py-1.5 rounded-lg text-xs font-bold transition-all">Sedang</button>
+                <button type="button" data-diff="hard" class="diff-tab py-1.5 rounded-lg text-xs font-bold transition-all">Sulit</button>
+                <button type="button" data-diff="expert" class="diff-tab py-1.5 rounded-lg text-xs font-bold transition-all">Ahli</button>
+            </div>
+
+            <!-- Baris Info: Kesalahan & Timer + Pause -->
+            <div class="flex items-center justify-between px-1.5 text-xs sm:text-sm">
+                <!-- Penghitung Kesalahan -->
+                <div id="mistake-badge" class="flex items-center gap-1.5 font-semibold px-2.5 py-1 rounded-lg transition-colors" style="background: rgba(244, 63, 94, 0.12);">
+                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span style="color: var(--text-secondary);">Kesalahan:</span>
+                    <span id="mistake-count" class="font-mono font-bold text-rose-400">0 / 3</span>
+                </div>
+
+                <!-- Timer & Tombol Pause -->
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1.5 font-mono font-bold px-2.5 py-1 rounded-lg" style="background: rgba(56, 189, 248, 0.12);">
+                        <svg class="w-3.5 h-3.5 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span id="timer-display">00:00</span>
+                    </div>
+                    <button id="btn-pause" type="button" title="Jeda Permainan" class="control-btn p-1.5 rounded-lg flex items-center justify-center" aria-label="Jeda">
+                        <svg id="icon-pause" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                            <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+                        </svg>
+                        <svg id="icon-play" class="w-4 h-4 text-emerald-400 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAPAN SUDOKU 9x9 -->
+        <section class="glass-panel rounded-2xl p-2 sm:p-2.5">
+            <div id="board-wrapper" class="sudoku-board-container">
+                <div id="sudoku-grid" class="sudoku-grid" role="grid" aria-label="Papan Sudoku 9 kali 9">
+                    <!-- 81 Sel dibuat secara dinamis oleh JavaScript -->
+                </div>
+
+                <!-- Overlay saat Game Dijeda (Pause) -->
+                <div id="pause-overlay" class="pause-overlay absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 opacity-0 invisible">
+                    <div class="w-14 h-14 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400">
+                        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                            <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                            <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+                        </svg>
+                    </div>
+                    <div class="text-center px-4">
+                        <h2 class="text-lg font-extrabold">Permainan Dijeda</h2>
+                        <p class="text-xs mt-0.5" style="color: var(--text-secondary);">Papan disembunyikan sementara waktu berhenti</p>
+                    </div>
+                    <button id="btn-resume-overlay" type="button" class="mt-1 px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 text-white text-sm font-bold shadow-lg shadow-sky-500/25 hover:scale-105 transition-transform">
+                        Lanjutkan Bermain
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TOMBOL AKSI: UNDO, ERASE, NOTES, HINT -->
+        <section class="grid grid-cols-4 gap-2">
+            <!-- Undo -->
+            <button id="btn-undo" type="button" class="control-btn py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 7v6h6"></path>
+                    <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+                </svg>
+                <span class="text-[11px] font-bold">Urungkan</span>
+            </button>
+
+            <!-- Hapus -->
+            <button id="btn-erase" type="button" class="control-btn py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"></path>
+                    <path d="M22 21H7"></path>
+                    <path d="m5 11 9 9"></path>
+                </svg>
+                <span class="text-[11px] font-bold">Hapus</span>
+            </button>
+
+            <!-- Mode Catatan (Notes) -->
+            <button id="btn-notes" type="button" class="control-btn relative py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1">
+                <span id="notes-badge" class="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-slate-500/30 text-slate-400">
+                    OFF
+                </span>
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                <span class="text-[11px] font-bold">Catatan</span>
+            </button>
+
+            <!-- Petunjuk (Hint) -->
+            <button id="btn-hint" type="button" class="control-btn relative py-2.5 px-2 rounded-2xl flex flex-col items-center justify-center gap-1">
+                <span id="hint-badge" class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full text-[10px] font-extrabold flex items-center justify-center bg-amber-500 text-slate-950">
+                    3
+                </span>
+                <svg class="w-5 h-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path>
+                    <path d="M9 18h6"></path>
+                    <path d="M10 22h4"></path>
+                </svg>
+                <span class="text-[11px] font-bold">Petunjuk</span>
+            </button>
+        </section>
+
+        <!-- KEYPAD ANGKA 1 - 9 DENGAN SISA JUMLAH -->
+        <section id="numpad" class="grid grid-cols-9 gap-1.5 sm:gap-2" aria-label="Tombol Angka 1 sampai 9">
+            <!-- 9 Tombol angka dirender via JavaScript -->
+        </section>
+
+        <!-- Petunjuk Pintasan Keyboard (Tampil di Layar Lebar) -->
+        <footer class="hidden sm:flex items-center justify-center gap-3 text-[11px] pt-0.5" style="color: var(--text-muted);">
+            <span><kbd class="font-mono font-bold">Panah</kbd> Navigasi</span>
+            <span>•</span>
+            <span><kbd class="font-mono font-bold">1-9</kbd> Isi Angka</span>
+            <span>•</span>
+            <span><kbd class="font-mono font-bold">N</kbd> Catatan</span>
+            <span>•</span>
+            <span><kbd class="font-mono font-bold">Z</kbd> Urungkan</span>
+            <span>•</span>
+            <span><kbd class="font-mono font-bold">H</kbd> Petunjuk</span>
+        </footer>
+    </main>
+
+    <!-- =========================================================
+         MODAL KEMENANGAN (VICTORY SCREEN)
+         ========================================================= -->
+    <div id="victory-modal" class="modal-backdrop fixed inset-0 z-40 flex items-center justify-center p-4 opacity-0 invisible">
+        <div class="glass-panel rounded-3xl max-w-sm w-full p-6 text-center flex flex-col items-center gap-4 transform scale-95 transition-transform duration-300" id="victory-card">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-sky-500 flex items-center justify-center text-white shadow-xl shadow-emerald-500/30">
+                <svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                    <path d="M4 22h16"></path>
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+                </svg>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-extrabold tracking-tight">Luar Biasa!</h2>
+                <p class="text-xs sm:text-sm mt-1" style="color: var(--text-secondary);">Kamu berhasil menyelesaikan puzzle Sudoku dengan sempurna.</p>
+            </div>
+
+            <!-- Statistik Penyelesaian -->
+            <div class="w-full grid grid-cols-3 gap-2 p-3 rounded-2xl" style="background: rgba(100, 116, 139, 0.14);">
+                <div class="flex flex-col">
+                    <span class="text-[10px] uppercase font-bold" style="color: var(--text-muted);">Tingkat</span>
+                    <span id="win-difficulty" class="text-sm font-extrabold text-sky-400 mt-0.5">Sedang</span>
+                </div>
+                <div class="flex flex-col border-x" style="border-color: var(--glass-border);">
+                    <span class="text-[10px] uppercase font-bold" style="color: var(--text-muted);">Waktu</span>
+                    <span id="win-time" class="text-sm font-mono font-extrabold text-emerald-400 mt-0.5">02:45</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-[10px] uppercase font-bold" style="color: var(--text-muted);">Kesalahan</span>
+                    <span id="win-mistakes" class="text-sm font-mono font-extrabold mt-0.5">0 / 3</span>
+                </div>
+            </div>
+
+            <button id="btn-play-again" type="button" class="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-400 hover:to-sky-400 text-white font-bold text-sm shadow-lg shadow-sky-500/25 transition-all active:scale-95">
+                Main Lagi
+            </button>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL GAME OVER (KESALAHAN MAKSIMAL 3/3)
+         ========================================================= -->
+    <div id="gameover-modal" class="modal-backdrop fixed inset-0 z-40 flex items-center justify-center p-4 opacity-0 invisible">
+        <div class="glass-panel rounded-3xl max-w-sm w-full p-6 text-center flex flex-col items-center gap-4 transform scale-95 transition-transform duration-300" id="gameover-card">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white shadow-xl shadow-rose-500/30">
+                <svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-extrabold tracking-tight">Permainan Berakhir</h2>
+                <p class="text-xs sm:text-sm mt-1" style="color: var(--text-secondary);">Kamu telah mencapai batas 3 kesalahan pada permainan ini.</p>
+            </div>
+
+            <div class="w-full flex flex-col sm:flex-row gap-2.5 mt-1">
+                <button id="btn-retry-current" type="button" class="flex-1 py-3 px-4 rounded-2xl control-btn font-bold text-xs sm:text-sm">
+                    Ulangi Puzzle Ini
+                </button>
+                <button id="btn-gameover-new" type="button" class="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-sky-500/25 transition-all active:scale-95">
+                    Permainan Baru
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ============================================================================
+         * 1. SOUND ENGINE (Web Audio API Synthesizer — Tanpa File Audio Eksternal)
+         * ============================================================================
+         */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            // Inisialisasi AudioContext saat interaksi pertama pengguna
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.ctx = new AudioContext();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            toggleMute() {
+                this.muted = !this.muted;
+                return this.muted;
+            }
+
+            // Nada dasar prosedur sintesis
+            playTone(freq, type = 'sine', duration = 0.12, gainVal = 0.12, delay = 0) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime + delay;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, now);
+
+                gain.gain.setValueAtTime(0.0001, now);
+                gain.gain.exponentialRampToValueAtTime(gainVal, now + 0.015);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + duration + 0.02);
+            }
+
+            playSelect() {
+                this.playTone(520, 'sine', 0.06, 0.05);
+            }
+
+            playNote() {
+                this.playTone(780, 'triangle', 0.07, 0.06);
+            }
+
+            playPlace() {
+                this.playTone(587.33, 'sine', 0.12, 0.11); // D5
+                this.playTone(880, 'sine', 0.16, 0.08, 0.04); // A5
+            }
+
+            playErase() {
+                this.playTone(340, 'triangle', 0.09, 0.07);
+            }
+
+            playHint() {
+                this.playTone(659.25, 'sine', 0.14, 0.1);
+                this.playTone(987.77, 'sine', 0.22, 0.11, 0.07);
+            }
+
+            playError() {
+                this.playTone(185, 'sawtooth', 0.18, 0.1);
+                this.playTone(155, 'sawtooth', 0.24, 0.1, 0.08);
+            }
+
+            // Arpeggio ceria saat menyelesaikan satu baris, kolom, atau kotak 3x3
+            playUnitComplete() {
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 - E5 - G5 - C6
+                notes.forEach((freq, idx) => {
+                    this.playTone(freq, 'sine', 0.24, 0.11, idx * 0.06);
+                });
+            }
+
+            // Fanfare kemenangan
+            playWin() {
+                const chord = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                chord.forEach((freq, idx) => {
+                    this.playTone(freq, 'triangle', 0.45, 0.12, idx * 0.09);
+                });
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 2. CONFETTI ENGINE (Animasi Perayaan Kemenangan Berbasis Canvas)
+         * ============================================================================
+         */
+        class ConfettiEngine {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.animId = null;
+                this.colors = ['#38bdf8', '#818cf8', '#34d399', '#fbbf24', '#f472b6', '#a78bfa'];
+                window.addEventListener('resize', () => this.resize());
+                this.resize();
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            launch() {
+                this.resize();
+                this.particles = [];
+                for (let i = 0; i < 140; i++) {
+                    this.particles.push({
+                        x: this.canvas.width * (0.2 + Math.random() * 0.6),
+                        y: this.canvas.height * 0.45,
+                        vx: (Math.random() - 0.5) * 14,
+                        vy: (Math.random() - 1.15) * 14,
+                        size: 6 + Math.random() * 6,
+                        color: this.colors[Math.floor(Math.random() * this.colors.length)],
+                        rotation: Math.random() * 360,
+                        vRot: (Math.random() - 0.5) * 12,
+                        gravity: 0.28 + Math.random() * 0.12,
+                        alpha: 1
+                    });
+                }
+                if (this.animId) cancelAnimationFrame(this.animId);
+                this.animate();
+            }
+
+            animate() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                let activeCount = 0;
+
+                for (const p of this.particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += p.gravity;
+                    p.vx *= 0.99;
+                    p.rotation += p.vRot;
+
+                    if (p.y > this.canvas.height * 0.75) {
+                        p.alpha -= 0.018;
+                    }
+
+                    if (p.alpha > 0 && p.y < this.canvas.height + 30) {
+                        activeCount++;
+                        this.ctx.save();
+                        this.ctx.globalAlpha = Math.max(0, p.alpha);
+                        this.ctx.translate(p.x, p.y);
+                        this.ctx.rotate((p.rotation * Math.PI) / 180);
+                        this.ctx.fillStyle = p.color;
+                        this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.65);
+                        this.ctx.restore();
+                    }
+                }
+
+                if (activeCount > 0) {
+                    this.animId = requestAnimationFrame(() => this.animate());
+                } else {
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+            }
+
+            stop() {
+                if (this.animId) cancelAnimationFrame(this.animId);
+                this.particles = [];
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 3. SUDOKU GENERATOR & SOLVER (Menjamin Solusi Unik & Valid)
+         * ============================================================================
+         */
+        class SudokuGenerator {
+            // Mengacak array menggunakan Fisher-Yates shuffle
+            static shuffle(array) {
+                const arr = [...array];
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            }
+
+            // Mengecek apakah angka num valid di posisi (row, col)
+            static isSafe(board, row, col, num) {
+                for (let i = 0; i < 9; i++) {
+                    if (board[row][i] === num) return false;
+                    if (board[i][col] === num) return false;
+                }
+                const startRow = Math.floor(row / 3) * 3;
+                const startCol = Math.floor(col / 3) * 3;
+                for (let r = 0; r < 3; r++) {
+                    for (let c = 0; c < 3; c++) {
+                        if (board[startRow + r][startCol + c] === num) return false;
+                    }
+                }
+                return true;
+            }
+
+            // Mengisi papan penuh secara acak dengan backtracking
+            static fillBoard(board) {
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (board[row][col] === 0) {
+                            const nums = this.shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                            for (const num of nums) {
+                                if (this.isSafe(board, row, col, num)) {
+                                    board[row][col] = num;
+                                    if (this.fillBoard(board)) return true;
+                                    board[row][col] = 0;
+                                }
+                            }
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            // Menghitung jumlah solusi (berhenti jika > limit) memakai MRV heuristic
+            static countSolutions(board, limit = 2) {
+                let minCandidates = 10;
+                let targetRow = -1;
+                let targetCol = -1;
+                let bestNums = [];
+
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        if (board[r][c] === 0) {
+                            const candidates = [];
+                            for (let n = 1; n <= 9; n++) {
+                                if (this.isSafe(board, r, c, n)) candidates.push(n);
+                            }
+                            if (candidates.length === 0) return 0;
+                            if (candidates.length < minCandidates) {
+                                minCandidates = candidates.length;
+                                targetRow = r;
+                                targetCol = c;
+                                bestNums = candidates;
+                            }
+                        }
+                    }
+                }
+
+                // Semua sel terisi -> 1 solusi ditemukan
+                if (targetRow === -1) return 1;
+
+                let solutions = 0;
+                for (const num of bestNums) {
+                    board[targetRow][targetCol] = num;
+                    solutions += this.countSolutions(board, limit);
+                    board[targetRow][targetCol] = 0;
+                    if (solutions >= limit) return solutions;
+                }
+                return solutions;
+            }
+
+            // Menghasilkan pasangan { puzzle, solution } berdasarkan tingkat kesulitan
+            static generate(difficulty = 'medium') {
+                const emptyTargets = {
+                    easy: 35,
+                    medium: 44,
+                    hard: 50,
+                    expert: 55
+                };
+                const targetEmpty = emptyTargets[difficulty] || 44;
+
+                // 1. Buat papan kosong 9x9
+                const solution = Array.from({ length: 9 }, () => Array(9).fill(0));
+
+                // 2. Isi 3 kotak diagonal 3x3 terlebih dahulu (independen & super cepat)
+                for (let box = 0; box < 9; box += 3) {
+                    const nums = this.shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                    let idx = 0;
+                    for (let r = 0; r < 3; r++) {
+                        for (let c = 0; c < 3; c++) {
+                            solution[box + r][box + c] = nums[idx++];
+                        }
+                    }
+                }
+
+                // 3. Lengkapi sisa sel menjadi solusi valid
+                this.fillBoard(solution);
+
+                // 4. Salin ke puzzle dan hapus angka dengan tetap menjaga solusi tunggal
+                const puzzle = solution.map(row => [...row]);
+                const coords = [];
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        coords.push([r, c]);
+                    }
+                }
+
+                const shuffledCoords = this.shuffle(coords);
+                let removed = 0;
+
+                for (const [r, c] of shuffledCoords) {
+                    if (removed >= targetEmpty) break;
+                    const backup = puzzle[r][c];
+                    puzzle[r][c] = 0;
+
+                    const testBoard = puzzle.map(row => [...row]);
+                    if (this.countSolutions(testBoard, 2) === 1) {
+                        removed++;
+                    } else {
+                        puzzle[r][c] = backup;
+                    }
+                }
+
+                return { puzzle, solution };
+            }
+        }
+
+        /**
+         * ============================================================================
+         * 4. PENGELOLA GAME UTAMA (SUDOKU GAME CONTROLLER)
+         * ============================================================================
+         */
+        class SudokuGame {
+            constructor() {
+                this.sound = new SoundEngine();
+                this.confetti = new ConfettiEngine('confetti-canvas');
+
+                // Konfigurasi & State Permainan
+                this.difficulty = 'medium';
+                this.difficultyLabels = {
+                    easy: 'Mudah',
+                    medium: 'Sedang',
+                    hard: 'Sulit',
+                    expert: 'Ahli'
+                };
+
+                this.initialBoard = [];
+                this.solutionBoard = [];
+                this.currentBoard = [];
+                this.notesBoard = [];   // Array 9x9 berisi Set(1..9)
+                this.errorBoard = [];   // Array 9x9 boolean untuk menandai input salah
+                this.hintedBoard = [];  // Array 9x9 boolean untuk menandai angka dari petunjuk
+                this.history = [];      // Tumpukan Undo
+
+                this.selected = { row: 4, col: 4 };
+                this.notesMode = false;
+                this.mistakes = 0;
+                this.maxMistakes = 3;
+                this.hintsLeft = 3;
+                this.seconds = 0;
+                this.timerInterval = null;
+                this.isPaused = false;
+                this.isGameOver = false;
+
+                // Referensi Elemen DOM
+                this.gridEl = document.getElementById('sudoku-grid');
+                this.numpadEl = document.getElementById('numpad');
+                this.cellElements = [];
+
+                this.buildBoardDOM();
+                this.buildNumpadDOM();
+                this.bindEvents();
+                this.startNewGame('medium');
+            }
+
+            // Membuat 81 sel DOM sekali saat inisialisasi
+            buildBoardDOM() {
+                this.gridEl.innerHTML = '';
+                this.cellElements = Array.from({ length: 9 }, () => Array(9).fill(null));
+
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'sudoku-cell';
+                        cell.dataset.row = r;
+                        cell.dataset.col = c;
+                        cell.setAttribute('role', 'gridcell');
+                        cell.setAttribute('aria-label', `Baris ${r + 1}, Kolom ${c + 1}`);
+
+                        cell.addEventListener('click', () => {
+                            if (this.isPaused || this.isGameOver) return;
+                            this.selectCell(r, c);
+                        });
+
+                        this.gridEl.appendChild(cell);
+                        this.cellElements[r][c] = cell;
+                    }
+                }
+            }
+
+            // Membuat tombol angka 1-9 dengan indikator sisa jumlah angka
+            buildNumpadDOM() {
+                this.numpadEl.innerHTML = '';
+                for (let n = 1; n <= 9; n++) {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'num-btn py-2 sm:py-2.5 rounded-xl flex flex-col items-center justify-center';
+                    btn.dataset.num = n;
+                    btn.innerHTML = `
+                        <span class="font-mono text-lg sm:text-xl font-extrabold leading-none">${n}</span>
+                        <span id="num-rem-${n}" class="text-[10px] font-mono font-semibold mt-1" style="color: var(--text-secondary);">9</span>
+                    `;
+                    btn.addEventListener('click', () => {
+                        if (this.isPaused || this.isGameOver) return;
+                        this.handleNumberInput(n);
+                    });
+                    this.numpadEl.appendChild(btn);
+                }
+            }
+
+            // Memulai permainan baru
+            startNewGame(difficulty = this.difficulty) {
+                this.difficulty = difficulty;
+                this.confetti.stop();
+                this.hideModals();
+
+                const { puzzle, solution } = SudokuGenerator.generate(difficulty);
+                this.initialBoard = puzzle.map(r => [...r]);
+                this.solutionBoard = solution.map(r => [...r]);
+                this.resetBoardState();
+
+                // Animasi masuk papan
+                const wrapper = document.getElementById('board-wrapper');
+                wrapper.classList.remove('board-refresh');
+                void wrapper.offsetWidth;
+                wrapper.classList.add('board-refresh');
+            }
+
+            // Mengatur ulang state pada puzzle saat ini (juga dipakai fitur "Ulangi Puzzle Ini")
+            resetBoardState() {
+                this.currentBoard = this.initialBoard.map(r => [...r]);
+                this.notesBoard = Array.from({ length: 9 }, () =>
+                    Array.from({ length: 9 }, () => new Set())
+                );
+                this.errorBoard = Array.from({ length: 9 }, () => Array(9).fill(false));
+                this.hintedBoard = Array.from({ length: 9 }, () => Array(9).fill(false));
+                this.history = [];
+
+                this.mistakes = 0;
+                this.hintsLeft = 3;
+                this.seconds = 0;
+                this.isPaused = false;
+                this.isGameOver = false;
+
+                // Pilih sel kosong pertama secara otomatis
+                let foundEmpty = false;
+                for (let r = 0; r < 9 && !foundEmpty; r++) {
+                    for (let c = 0; c < 9 && !foundEmpty; c++) {
+                        if (this.currentBoard[r][c] === 0) {
+                            this.selected = { row: r, col: c };
+                            foundEmpty = true;
+                        }
+                    }
+                }
+
+                this.updateDifficultyTabs();
+                this.updateStatsUI();
+                this.updatePauseUI();
+                this.renderBoard();
+                this.updateNumpadCounts();
+                this.startTimer();
+            }
+
+            // Menyimpan snapshot untuk Undo
+            pushHistory() {
+                this.history.push({
+                    board: this.currentBoard.map(r => [...r]),
+                    notes: this.notesBoard.map(r => r.map(set => new Set(set))),
+                    errors: this.errorBoard.map(r => [...r]),
+                    hinted: this.hintedBoard.map(r => [...r])
+                });
+            }
+
+            // Undo langkah terakhir
+            undo() {
+                if (this.isPaused || this.isGameOver || this.history.length === 0) return;
+                const prev = this.history.pop();
+                this.currentBoard = prev.board;
+                this.notesBoard = prev.notes;
+                this.errorBoard = prev.errors;
+                this.hintedBoard = prev.hinted;
+                this.sound.playErase();
+                this.renderBoard();
+                this.updateNumpadCounts();
+            }
+
+            // Memilih sel tertentu
+            selectCell(row, col) {
+                this.selected = { row, col };
+                this.sound.playSelect();
+                this.renderBoard();
+            }
+
+            // Menangani input angka 1-9 (baik mode normal maupun mode catatan)
+            handleNumberInput(num) {
+                const { row, col } = this.selected;
+
+                // Jangan ubah sel bawaan soal atau sel yang sudah benar terisi
+                if (this.initialBoard[row][col] !== 0) return;
+                if (this.currentBoard[row][col] === this.solutionBoard[row][col] && !this.errorBoard[row][col]) {
+                    return;
+                }
+
+                // MODE CATATAN (NOTES)
+                if (this.notesMode) {
+                    // Jika sel sedang berisi angka salah, bersihkan dulu
+                    this.pushHistory();
+                    if (this.currentBoard[row][col] !== 0) {
+                        this.currentBoard[row][col] = 0;
+                        this.errorBoard[row][col] = false;
+                    }
+
+                    const cellNotes = this.notesBoard[row][col];
+                    if (cellNotes.has(num)) {
+                        cellNotes.delete(num);
+                    } else {
+                        cellNotes.add(num);
+                    }
+
+                    this.sound.playNote();
+                    this.renderBoard();
+                    return;
+                }
+
+                // MODE NORMAL (ISI ANGKA)
+                if (this.currentBoard[row][col] === num && !this.errorBoard[row][col]) return;
+
+                this.pushHistory();
+                this.notesBoard[row][col].clear();
+                this.currentBoard[row][col] = num;
+
+                // Cek kebenaran terhadap solusi
+                if (num === this.solutionBoard[row][col]) {
+                    this.errorBoard[row][col] = false;
+                    this.cleanConflictingNotes(row, col, num);
+                    this.renderBoard({ popCell: { row, col } });
+                    this.updateNumpadCounts();
+
+                    // Cek apakah melengkapi baris, kolom, atau kotak 3x3
+                    const completedCells = this.getCompletedUnitCells(row, col);
+                    if (completedCells.length > 0) {
+                        this.sound.playUnitComplete();
+                        this.triggerWaveAnimation(row, col, completedCells);
+                    } else {
+                        this.sound.playPlace();
+                    }
+
+                    // Cek kemenangan total
+                    if (this.checkVictory()) {
+                        this.handleVictory();
+                    }
+                } else {
+                    // ANGKA SALAH
+                    this.errorBoard[row][col] = true;
+                    this.mistakes++;
+                    this.sound.playError();
+                    this.updateStatsUI();
+                    this.renderBoard({ shakeCell: { row, col } });
+                    this.updateNumpadCounts();
+
+                    // Animasi getar pada badge kesalahan
+                    const badge = document.getElementById('mistake-badge');
+                    badge.classList.remove('anim-shake');
+                    void badge.offsetWidth;
+                    badge.classList.add('anim-shake');
+
+                    if (this.mistakes >= this.maxMistakes) {
+                        this.handleGameOver();
+                    }
+                }
+            }
+
+            // Menghapus angka atau catatan pada sel aktif
+            eraseSelected() {
+                if (this.isPaused || this.isGameOver) return;
+                const { row, col } = this.selected;
+
+                if (this.initialBoard[row][col] !== 0) return;
+                // Lindungi sel yang sudah benar terisi agar tidak terhapus tak sengaja
+                if (this.currentBoard[row][col] === this.solutionBoard[row][col] && !this.errorBoard[row][col]) {
+                    return;
+                }
+
+                const hasValue = this.currentBoard[row][col] !== 0;
+                const hasNotes = this.notesBoard[row][col].size > 0;
+                if (!hasValue && !hasNotes) return;
+
+                this.pushHistory();
+                this.currentBoard[row][col] = 0;
+                this.errorBoard[row][col] = false;
+                this.notesBoard[row][col].clear();
+
+                this.sound.playErase();
+                this.renderBoard();
+                this.updateNumpadCounts();
+            }
+
+            // Menggunakan fitur Petunjuk (Hint)
+            useHint() {
+                if (this.isPaused || this.isGameOver || this.hintsLeft <= 0) return;
+
+                let { row, col } = this.selected;
+
+                // Jika sel terpilih sudah valid, cari sel kosong atau sel salah secara acak
+                if (this.currentBoard[row][col] === this.solutionBoard[row][col] && !this.errorBoard[row][col]) {
+                    const candidates = [];
+                    for (let r = 0; r < 9; r++) {
+                        for (let c = 0; c < 9; c++) {
+                            if (this.currentBoard[r][c] !== this.solutionBoard[r][c]) {
+                                candidates.push({ row: r, col: c });
+                            }
+                        }
+                    }
+                    if (candidates.length === 0) return;
+                    const pick = candidates[Math.floor(Math.random() * candidates.length)];
+                    row = pick.row;
+                    col = pick.col;
+                    this.selected = { row, col };
+                }
+
+                this.pushHistory();
+                const correctNum = this.solutionBoard[row][col];
+                this.currentBoard[row][col] = correctNum;
+                this.errorBoard[row][col] = false;
+                this.hintedBoard[row][col] = true;
+                this.notesBoard[row][col].clear();
+                this.hintsLeft--;
+
+                this.cleanConflictingNotes(row, col, correctNum);
+                this.updateStatsUI();
+                this.renderBoard({ popCell: { row, col } });
+                this.updateNumpadCounts();
+
+                const completedCells = this.getCompletedUnitCells(row, col);
+                if (completedCells.length > 0) {
+                    this.sound.playUnitComplete();
+                    this.triggerWaveAnimation(row, col, completedCells);
+                } else {
+                    this.sound.playHint();
+                }
+
+                if (this.checkVictory()) {
+                    this.handleVictory();
+                }
+            }
+
+            // Menghapus otomatis catatan angka yang bertentangan di baris, kolom, dan kotak 3x3
+            cleanConflictingNotes(row, col, num) {
+                for (let i = 0; i < 9; i++) {
+                    this.notesBoard[row][i].delete(num);
+                    this.notesBoard[i][col].delete(num);
+                }
+                const startRow = Math.floor(row / 3) * 3;
+                const startCol = Math.floor(col / 3) * 3;
+                for (let r = 0; r < 3; r++) {
+                    for (let c = 0; c < 3; c++) {
+                        this.notesBoard[startRow + r][startCol + c].delete(num);
+                    }
+                }
+            }
+
+            // Mengumpulkan sel dari baris, kolom, atau kotak 3x3 yang baru saja lengkap benar
+            getCompletedUnitCells(row, col) {
+                const cellsMap = new Map();
+                const addCell = (r, c) => cellsMap.set(`${r},${c}`, { row: r, col: c });
+
+                // Cek Baris
+                let rowComplete = true;
+                for (let c = 0; c < 9; c++) {
+                    if (this.currentBoard[row][c] !== this.solutionBoard[row][c]) {
+                        rowComplete = false;
+                        break;
+                    }
+                }
+                if (rowComplete) {
+                    for (let c = 0; c < 9; c++) addCell(row, c);
+                }
+
+                // Cek Kolom
+                let colComplete = true;
+                for (let r = 0; r < 9; r++) {
+                    if (this.currentBoard[r][col] !== this.solutionBoard[r][col]) {
+                        colComplete = false;
+                        break;
+                    }
+                }
+                if (colComplete) {
+                    for (let r = 0; r < 9; r++) addCell(r, col);
+                }
+
+                // Cek Kotak 3x3
+                const startRow = Math.floor(row / 3) * 3;
+                const startCol = Math.floor(col / 3) * 3;
+                let boxComplete = true;
+                for (let r = 0; r < 3; r++) {
+                    for (let c = 0; c < 3; c++) {
+                        if (this.currentBoard[startRow + r][startCol + c] !== this.solutionBoard[startRow + r][startCol + c]) {
+                            boxComplete = false;
+                            break;
+                        }
+                    }
+                }
+                if (boxComplete) {
+                    for (let r = 0; r < 3; r++) {
+                        for (let c = 0; c < 3; c++) {
+                            addCell(startRow + r, startCol + c);
+                        }
+                    }
+                }
+
+                return Array.from(cellsMap.values());
+            }
+
+            // Memicu animasi gelombang (ripple) berurutan berdasarkan jarak dari sel yang diisi
+            triggerWaveAnimation(originRow, originCol, cells) {
+                cells.forEach(({ row, col }) => {
+                    const cellEl = this.cellElements[row][col];
+                    const distance = Math.hypot(row - originRow, col - originCol);
+                    const delayMs = Math.round(distance * 55);
+
+                    cellEl.classList.remove('anim-wave');
+                    void cellEl.offsetWidth;
+                    cellEl.style.animationDelay = `${delayMs}ms`;
+                    cellEl.classList.add('anim-wave');
+
+                    setTimeout(() => {
+                        cellEl.classList.remove('anim-wave');
+                        cellEl.style.animationDelay = '';
+                    }, delayMs + 700);
+                });
+            }
+
+            // Mengecek apakah seluruh 81 sel telah diisi dengan benar
+            checkVictory() {
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        if (this.currentBoard[r][c] !== this.solutionBoard[r][c]) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            // Menangani kondisi menang
+            handleVictory() {
+                this.isGameOver = true;
+                this.stopTimer();
+                this.sound.playWin();
+                this.confetti.launch();
+
+                // Animasi gelombang seluruh papan
+                const allCells = [];
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        allCells.push({ row: r, col: c });
+                    }
+                }
+                this.triggerWaveAnimation(this.selected.row, this.selected.col, allCells);
+
+                setTimeout(() => {
+                    document.getElementById('win-difficulty').textContent = this.difficultyLabels[this.difficulty];
+                    document.getElementById('win-time').textContent = this.formatTime(this.seconds);
+                    document.getElementById('win-mistakes').textContent = `${this.mistakes} / ${this.maxMistakes}`;
+                    this.showModal('victory-modal', 'victory-card');
+                }, 650);
+            }
+
+            // Menangani kondisi kalah (3 kesalahan)
+            handleGameOver() {
+                this.isGameOver = true;
+                this.stopTimer();
+                setTimeout(() => {
+                    this.showModal('gameover-modal', 'gameover-card');
+                }, 400);
+            }
+
+            // Render visual seluruh papan 9x9 beserta sorotan
+            renderBoard(animOptions = {}) {
+                const { row: selR, col: selC } = this.selected;
+                const selectedVal = this.currentBoard[selR][selC];
+                const selBoxR = Math.floor(selR / 3);
+                const selBoxC = Math.floor(selC / 3);
+
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        const cellEl = this.cellElements[r][c];
+                        const val = this.currentBoard[r][c];
+                        const isSelected = r === selR && c === selC;
+                        const isSameBox = Math.floor(r / 3) === selBoxR && Math.floor(c / 3) === selBoxC;
+                        const isRelated = !isSelected && (r === selR || c === selC || isSameBox);
+                        const isSameNum = !isSelected && selectedVal !== 0 && val === selectedVal;
+                        const isError = this.errorBoard[r][c];
+
+                        cellEl.classList.toggle('is-selected', isSelected);
+                        cellEl.classList.toggle('is-related', isRelated);
+                        cellEl.classList.toggle('is-same-num', isSameNum);
+                        cellEl.classList.toggle('is-error', isError);
+
+                        // Animasi getar jika baru salah input
+                        if (animOptions.shakeCell && animOptions.shakeCell.row === r && animOptions.shakeCell.col === c) {
+                            cellEl.classList.remove('anim-shake');
+                            void cellEl.offsetWidth;
+                            cellEl.classList.add('anim-shake');
+                        }
+
+                        // Isi konten sel: Angka utama ATAU grid kecil catatan 3x3
+                        if (val !== 0) {
+                            let typeClass = 'user';
+                            if (this.initialBoard[r][c] !== 0) typeClass = 'fixed';
+                            else if (isError) typeClass = 'error';
+                            else if (this.hintedBoard[r][c]) typeClass = 'hint';
+
+                            const shouldPop = animOptions.popCell && animOptions.popCell.row === r && animOptions.popCell.col === c;
+                            cellEl.innerHTML = `<span class="cell-value ${typeClass} ${shouldPop ? 'anim-pop' : ''}">${val}</span>`;
+                        } else {
+                            const notes = this.notesBoard[r][c];
+                            if (notes.size > 0) {
+                                let notesHTML = '<div class="notes-grid">';
+                                for (let n = 1; n <= 9; n++) {
+                                    const active = notes.has(n);
+                                    const highlightNote = active && selectedVal === n;
+                                    notesHTML += `<span class="note-item ${highlightNote ? 'is-highlighted-note' : ''}">${active ? n : ''}</span>`;
+                                }
+                                notesHTML += '</div>';
+                                cellEl.innerHTML = notesHTML;
+                            } else {
+                                cellEl.innerHTML = '';
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Memperbarui indikator sisa angka 1-9 di keypad bawah
+            updateNumpadCounts() {
+                const correctCounts = Array(10).fill(0);
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        const val = this.currentBoard[r][c];
+                        if (val !== 0 && val === this.solutionBoard[r][c]) {
+                            correctCounts[val]++;
+                        }
+                    }
+                }
+
+                for (let n = 1; n <= 9; n++) {
+                    const remaining = Math.max(0, 9 - correctCounts[n]);
+                    const remEl = document.getElementById(`num-rem-${n}`);
+                    const btnEl = this.numpadEl.querySelector(`[data-num="${n}"]`);
+                    if (remEl) remEl.textContent = remaining;
+                    if (btnEl) btnEl.classList.toggle('is-completed', remaining === 0);
+                }
+            }
+
+            // Memperbarui tab tingkat kesulitan yang aktif
+            updateDifficultyTabs() {
+                document.querySelectorAll('.diff-tab').forEach(tab => {
+                    const isActive = tab.dataset.diff === this.difficulty;
+                    if (isActive) {
+                        tab.style.background = 'var(--accent-primary)';
+                        tab.style.color = '#ffffff';
+                        tab.style.boxShadow = '0 4px 12px var(--accent-glow)';
+                    } else {
+                        tab.style.background = 'transparent';
+                        tab.style.color = 'var(--text-secondary)';
+                        tab.style.boxShadow = 'none';
+                    }
+                });
+            }
+
+            // Memperbarui statistik Kesalahan & Petunjuk
+            updateStatsUI() {
+                document.getElementById('mistake-count').textContent = `${this.mistakes} / ${this.maxMistakes}`;
+                const hintBadge = document.getElementById('hint-badge');
+                hintBadge.textContent = this.hintsLeft;
+                hintBadge.classList.toggle('opacity-40', this.hintsLeft === 0);
+            }
+
+            // Toggle Mode Catatan (Notes)
+            toggleNotesMode() {
+                if (this.isPaused || this.isGameOver) return;
+                this.notesMode = !this.notesMode;
+                const badge = document.getElementById('notes-badge');
+                const btn = document.getElementById('btn-notes');
+
+                if (this.notesMode) {
+                    badge.textContent = 'ON';
+                    badge.className = 'absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-sky-500 text-white';
+                    btn.style.borderColor = 'var(--accent-primary)';
+                } else {
+                    badge.textContent = 'OFF';
+                    badge.className = 'absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-slate-500/30 text-slate-400';
+                    btn.style.borderColor = 'var(--glass-border)';
+                }
+                this.sound.playSelect();
+            }
+
+            // Timer & Pause
+            startTimer() {
+                this.stopTimer();
+                document.getElementById('timer-display').textContent = this.formatTime(this.seconds);
+                this.timerInterval = setInterval(() => {
+                    if (!this.isPaused && !this.isGameOver) {
+                        this.seconds++;
+                        document.getElementById('timer-display').textContent = this.formatTime(this.seconds);
+                    }
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
+
+            togglePause() {
+                if (this.isGameOver) return;
+                this.isPaused = !this.isPaused;
+                this.sound.playSelect();
+                this.updatePauseUI();
+            }
+
+            updatePauseUI() {
+                const overlay = document.getElementById('pause-overlay');
+                const iconPause = document.getElementById('icon-pause');
+                const iconPlay = document.getElementById('icon-play');
+
+                if (this.isPaused) {
+                    overlay.classList.remove('opacity-0', 'invisible');
+                    iconPause.classList.add('hidden');
+                    iconPlay.classList.remove('hidden');
+                } else {
+                    overlay.classList.add('opacity-0', 'invisible');
+                    iconPause.classList.remove('hidden');
+                    iconPlay.classList.add('hidden');
+                }
+            }
+
+            formatTime(totalSec) {
+                const mins = Math.floor(totalSec / 60).toString().padStart(2, '0');
+                const secs = (totalSec % 60).toString().padStart(2, '0');
+                return `${mins}:${secs}`;
+            }
+
+            // Tampilkan / Sembunyikan Modal Kustom
+            showModal(backdropId, cardId) {
+                const backdrop = document.getElementById(backdropId);
+                const card = document.getElementById(cardId);
+                backdrop.classList.remove('opacity-0', 'invisible');
+                setTimeout(() => {
+                    card.classList.remove('scale-95');
+                    card.classList.add('scale-100');
+                }, 20);
+            }
+
+            hideModals() {
+                ['victory-modal', 'gameover-modal'].forEach(id => {
+                    document.getElementById(id).classList.add('opacity-0', 'invisible');
+                });
+                ['victory-card', 'gameover-card'].forEach(id => {
+                    const card = document.getElementById(id);
+                    card.classList.remove('scale-100');
+                    card.classList.add('scale-95');
+                });
+            }
+
+            // Mengikat semua event listener (Tombol, Tema, Audio, & Keyboard)
+            bindEvents() {
+                // Tab Tingkat Kesulitan
+                document.querySelectorAll('.diff-tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        this.sound.playSelect();
+                        this.startNewGame(tab.dataset.diff);
+                    });
+                });
+
+                // Tombol Aksi Utama
+                document.getElementById('btn-new-game').addEventListener('click', () => {
+                    this.sound.playSelect();
+                    this.startNewGame(this.difficulty);
+                });
+
+                document.getElementById('btn-undo').addEventListener('click', () => this.undo());
+                document.getElementById('btn-erase').addEventListener('click', () => this.eraseSelected());
+                document.getElementById('btn-notes').addEventListener('click', () => this.toggleNotesMode());
+                document.getElementById('btn-hint').addEventListener('click', () => this.useHint());
+
+                // Pause & Resume
+                document.getElementById('btn-pause').addEventListener('click', () => this.togglePause());
+                document.getElementById('btn-resume-overlay').addEventListener('click', () => this.togglePause());
+
+                // Tombol Modal Victory & Game Over
+                document.getElementById('btn-play-again').addEventListener('click', () => {
+                    this.startNewGame(this.difficulty);
+                });
+                document.getElementById('btn-gameover-new').addEventListener('click', () => {
+                    this.startNewGame(this.difficulty);
+                });
+                document.getElementById('btn-retry-current').addEventListener('click', () => {
+                    this.hideModals();
+                    this.resetBoardState();
+                });
+
+                // Toggle Dark / Light Mode
+                document.getElementById('btn-theme').addEventListener('click', () => {
+                    const html = document.documentElement;
+                    const isDark = html.getAttribute('data-theme') === 'dark';
+                    const nextTheme = isDark ? 'light' : 'dark';
+                    html.setAttribute('data-theme', nextTheme);
+
+                    document.getElementById('icon-sun').classList.toggle('hidden', nextTheme === 'light');
+                    document.getElementById('icon-moon').classList.toggle('hidden', nextTheme === 'dark');
+                    this.sound.playSelect();
+                });
+
+                // Toggle Mute / Unmute Audio
+                document.getElementById('btn-sound').addEventListener('click', () => {
+                    const isMuted = this.sound.toggleMute();
+                    document.getElementById('icon-sound-on').classList.toggle('hidden', isMuted);
+                    document.getElementById('icon-sound-off').classList.toggle('hidden', !isMuted);
+                    if (!isMuted) this.sound.playSelect();
+                });
+
+                // Kontrol Keyboard Lengkap
+                document.addEventListener('keydown', (e) => {
+                    if (this.isGameOver) return;
+
+                    // Jeda dengan tombol P
+                    if (e.key.toLowerCase() === 'p') {
+                        e.preventDefault();
+                        this.togglePause();
+                        return;
+                    }
+
+                    if (this.isPaused) return;
+
+                    // Navigasi Panah & WASD
+                    const { row, col } = this.selected;
+                    if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') {
+                        e.preventDefault();
+                        this.selectCell((row + 8) % 9, col);
+                    } else if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') {
+                        e.preventDefault();
+                        this.selectCell((row + 1) % 9, col);
+                    } else if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
+                        e.preventDefault();
+                        this.selectCell(row, (col + 8) % 9);
+                    } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
+                        e.preventDefault();
+                        this.selectCell(row, (col + 1) % 9);
+                    }
+                    // Angka 1 - 9
+                    else if (e.key >= '1' && e.key <= '9') {
+                        e.preventDefault();
+                        this.handleNumberInput(parseInt(e.key, 10));
+                    }
+                    // Hapus (Backspace / Delete / 0)
+                    else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
+                        e.preventDefault();
+                        this.eraseSelected();
+                    }
+                    // Mode Catatan (N)
+                    else if (e.key.toLowerCase() === 'n') {
+                        e.preventDefault();
+                        this.toggleNotesMode();
+                    }
+                    // Urungkan / Undo (Z atau Ctrl+Z)
+                    else if (e.key.toLowerCase() === 'z') {
+                        e.preventDefault();
+                        this.undo();
+                    }
+                    // Petunjuk / Hint (H)
+                    else if (e.key.toLowerCase() === 'h') {
+                        e.preventDefault();
+                        this.useHint();
+                    }
+                });
+            }
+        }
+
+        // Jalankan aplikasi setelah halaman dimuat sempurna
+        window.addEventListener('DOMContentLoaded', () => {
+            window.sudokuApp = new SudokuGame();
+        });
+    </script>
+</body>
+</html>
